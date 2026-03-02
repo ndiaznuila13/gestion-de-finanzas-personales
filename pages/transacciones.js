@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import Layout from '../components/Layout'
 import { useStore } from '../store/useStore'
+import withAuth from '../src/guards/withAuth'
 
-export default function Transacciones() {
+function Transacciones() {
   const { transactions } = useStore()
 
   const sampleTransactions = [
@@ -126,3 +127,5 @@ export default function Transacciones() {
     </Layout>
   )
 }
+
+export default withAuth(Transacciones)

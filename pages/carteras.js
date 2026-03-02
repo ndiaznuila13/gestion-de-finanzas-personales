@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import Layout from '../components/Layout'
 import { useStore } from '../store/useStore'
+import withAuth from '../src/guards/withAuth'
 
-export default function Carteras() {
+function Carteras() {
   const { accounts } = useStore()
   const [walletName, setWalletName] = useState('')
   const [initialAmount, setInitialAmount] = useState('')
@@ -148,3 +149,5 @@ export default function Carteras() {
     </Layout>
   )
 }
+
+export default withAuth(Carteras)

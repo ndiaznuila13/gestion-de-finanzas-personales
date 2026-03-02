@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { getSession, logout } from '../src/services/authService'
 
 export default function Layout({ children, title = 'Mi Finanzas' }) {
   const router = useRouter()
   const path = router.pathname
+  const [usuarioActivo, setUsuarioActivo] = useState(null)
+
+  useEffect(() => {
+    setUsuarioActivo(getSession())
+  }, [path])
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
 
   const navItems = [
     { href: '/transacciones', label: 'Transacciones', icon: 'receipt_long' },
@@ -66,11 +78,21 @@ export default function Layout({ children, title = 'Mi Finanzas' }) {
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVN-pUHflivqjPksMhXNVTb9NmQRqreiQyCQ2vHf3Dsm6A0P2FaYPixYSVoZk_3Pzacuc8Ndn1VnwKsVUKIhaPgck76Is7OvxJO9ajky5D0CCoffTPSzujB8lMtnJqPwfY7XvG5ExUE24sC5og_6hSsCQfCgxsqkPjj49v39EeHx8s2PkDVdZrU80rh7tqbEDJtDCG5_t9WcBeUzIslOWlO4DmaZUK2gZ0QTNwWO3a_AN9OV94vHvfOLsxtaL4yPTZsazlHoQkagwp"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">Alex Johnson</p>
-                <p className="text-[10px] text-slate-500 truncate">Premium Member</p>
+                <p className="text-xs font-bold text-slate-900 truncate">
+                  {usuarioActivo?.nombre || 'Usuario'}
+                </p>
+                <p className="text-[10px] text-slate-500 truncate">
+                  {usuarioActivo?.email || 'Sin sesión activa'}
+                </p>
               </div>
-              <span className="material-symbols-outlined text-slate-400 text-sm">unfold_more</span>
             </div>
+            <button
+              className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              type="button"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </button>
           </div>
         </aside>
 

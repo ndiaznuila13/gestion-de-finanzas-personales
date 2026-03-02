@@ -1,6 +1,7 @@
 import Layout from '../components/Layout'
+import withAuth from '../src/guards/withAuth'
 
-export default function Presupuestos() {
+function Presupuestos() {
   const budgets = [
     { id: 1, name: 'Alimentación', icon: 'restaurant', iconBg: 'bg-primary/10 text-primary', spent: 600, limit: 800, barColor: 'bg-primary' },
     { id: 2, name: 'Transporte', icon: 'directions_car', iconBg: 'bg-orange-100 text-orange-600', spent: 120, limit: 300, barColor: 'bg-orange-500' },
@@ -103,3 +104,5 @@ export default function Presupuestos() {
     </Layout>
   )
 }
+
+export default withAuth(Presupuestos)
