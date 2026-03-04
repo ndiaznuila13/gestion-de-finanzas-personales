@@ -22,7 +22,7 @@ export default function withAuth(WrappedComponent) {
 
     if (isChecking || !isAuthenticated) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-background-light font-display text-sm font-medium text-slate-600">
+        <div className="d-flex min-vh-100 align-items-center justify-content-center bg-body-tertiary text-secondary small fw-medium">
           Cargando sesión...
         </div>
       )

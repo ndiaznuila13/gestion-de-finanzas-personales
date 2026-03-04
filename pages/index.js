@@ -9,7 +9,7 @@ function Home() {
   }, [router])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background-light font-display text-sm font-medium text-slate-600">
+    <div className="d-flex min-vh-100 align-items-center justify-content-center bg-body-tertiary text-secondary small fw-medium">
       Redirigiendo al inicio de sesión...
     </div>
   )
