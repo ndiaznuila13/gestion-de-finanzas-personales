@@ -4,12 +4,13 @@ import Layout from '../components/Layout'
 import { useStore } from '../store/useStore'
 
 export default function NuevaTransaccion() {
-  const { accounts, addTransaction } = useStore()
+  const { accounts, budgets, addTransaction } = useStore()
   const [type, setType] = useState('expense')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [accountId, setAccountId] = useState('')
+  const [budgetId, setBudgetId] = useState('')
   const [category, setCategory] = useState('food')
   const router = useRouter()
 
@@ -156,6 +157,25 @@ export default function NuevaTransaccion() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="form-label fw-semibold">Presupuesto</label>
+                  <select
+                    className="form-select"
+                    value={budgetId}
+                    onChange={(event) => setBudgetId(event.target.value)}
+                    aria-describedby="budget-help-text"
+                  >
+                    {budgets.map((budget) => (
+                      <option key={budget.id} value={budget.id}>
+                        {budget.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="budget-help-text" className="form-text text-secondary opacity-75 mb-0">
+                    Este campo es opcional
+                  </p>
                 </div>
 
                 <div>
