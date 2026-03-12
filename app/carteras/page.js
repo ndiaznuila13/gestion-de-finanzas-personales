@@ -152,10 +152,6 @@ function Carteras() {
                   onChange={(event) => setSearchTerm(event.target.value)}
                 />
               </div>
-              <button className="btn btn-outline-secondary position-relative d-inline-flex align-items-center" type="button">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="notification-dot" />
-              </button>
             </div>
           </div>
         </header>

@@ -92,10 +92,6 @@ function Transacciones() {
               <p className="text-secondary mb-0">Gestiona y analiza tus movimientos financieros</p>
             </div>
             <div className="d-flex flex-wrap gap-2">
-              <button className="btn btn-outline-secondary d-inline-flex align-items-center gap-2" type="button">
-                <span className="material-symbols-outlined fs-6">download</span>
-                Exportar CSV
-              </button>
               <Link
                 href="/nueva_transaccion"
                 className="btn btn-primary d-inline-flex align-items-center gap-2"
