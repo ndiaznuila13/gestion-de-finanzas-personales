@@ -7,7 +7,6 @@ import withAuth from '../../src/guards/withAuth'
 
 function Carteras() {
   const { accounts, addAccount, updateAccount, deleteAccount } = useStore()
-  const [searchTerm, setSearchTerm] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -36,7 +35,6 @@ function Carteras() {
   const wallets = useMemo(
     () =>
       accounts
-        .filter((account) => account.name.toLowerCase().includes(searchTerm.toLowerCase()))
         .map((account) => {
           const goal = Number.isFinite(account.goal) && account.goal > 0
             ? account.goal
@@ -52,7 +50,7 @@ function Carteras() {
             iconBg: visuals.iconBg
           }
         }),
-    [accounts, searchTerm]
+    [accounts]
   )
 
   const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0)
@@ -140,18 +138,14 @@ function Carteras() {
               <p className="text-secondary mb-0">Gestiona tus saldos y metas de ahorro en un solo lugar.</p>
             </div>
             <div className="d-flex align-items-center gap-2 w-100 flex-grow-1 flex-lg-grow-0 justify-content-lg-end">
-              <div className="input-group wallet-search">
-                <span className="input-group-text bg-body">
-                  <span className="material-symbols-outlined fs-6 text-secondary">search</span>
-                </span>
-                <input
-                  className="form-control"
-                  placeholder="Buscar carteras..."
-                  type="text"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </div>
+              <button
+                className="btn btn-primary d-inline-flex align-items-center gap-2 px-4"
+                type="button"
+                onClick={openCreateModal}
+              >
+                <span className="material-symbols-outlined fs-6">add</span>
+                <span>Crear Cartera</span>
+              </button>
             </div>
           </div>
         </header>
@@ -170,27 +164,6 @@ function Carteras() {
             <span className="material-symbols-outlined wallet-hero-icon">account_balance</span>
           </div>
         </div>
-
-        <section className="mb-4">
-          <div className="card border-dashed shadow-sm">
-            <div className="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-              <div>
-                <h3 className="h5 fw-bold mb-1">Gestiona tus carteras</h3>
-                <p className="text-secondary mb-0 small">
-                  Crea una cartera nueva o administra las que ya tienes activas.
-                </p>
-              </div>
-              <button
-                className="btn btn-primary d-inline-flex align-items-center gap-2 px-4"
-                type="button"
-                onClick={openCreateModal}
-              >
-                <span className="material-symbols-outlined fs-6">add</span>
-                <span>Crear Cartera</span>
-              </button>
-            </div>
-          </div>
-        </section>
 
         <section>
           <div className="d-flex align-items-center justify-content-between mb-3">
@@ -262,7 +235,7 @@ function Carteras() {
             </div>
           ) : (
             <div className="alert alert-secondary mb-0">
-              No se encontraron carteras con ese filtro.
+              Aun no has creado carteras.
             </div>
           )}
         </section>
