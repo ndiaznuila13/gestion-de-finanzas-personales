@@ -2,16 +2,29 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSession, login, resetPassword } from '../../src/services/authService'
+import { getSession, login, registerUser, resetPassword } from '../../src/services/authService'
+
+const AUTH_TABS = {
+  LOGIN: 'login',
+  REGISTER: 'register'
+}
 
 export default function Login() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState(AUTH_TABS.LOGIN)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
+  const [registerName, setRegisterName] = useState('')
+  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerPassword, setRegisterPassword] = useState('')
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('')
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [registerError, setRegisterError] = useState('')
   const [success, setSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
@@ -21,8 +34,10 @@ export default function Login() {
   const [isResetLoading, setIsResetLoading] = useState(false)
 
   useEffect(() => {
-    document.title = 'Mis Finanzas - Iniciar sesión'
-  }, [])
+    document.title = activeTab === AUTH_TABS.REGISTER
+      ? 'Mis Finanzas - Registrarse'
+      : 'Mis Finanzas - Iniciar sesión'
+  }, [activeTab])
 
   useEffect(() => {
     const session = getSession()
@@ -35,29 +50,88 @@ export default function Login() {
     setIsCheckingSession(false)
   }, [router])
 
+  const switchTab = (tab) => {
+    setActiveTab(tab)
+    setLoginError('')
+    setRegisterError('')
+    setSuccess('')
+    setIsLoading(false)
+    setIsRegisterLoading(false)
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    setError('')
+    setLoginError('')
+    setRegisterError('')
     setSuccess('')
 
     if (!email.trim() || !password.trim()) {
-      setError('Correo y contraseña son obligatorios')
+      setLoginError('Correo y contraseña son obligatorios.')
       return
     }
 
     setIsLoading(true)
-
     await new Promise((resolve) => setTimeout(resolve, 450))
 
     const user = login(email, password)
 
     if (!user) {
-      setError('Correo o contraseña incorrectos')
+      setLoginError('Correo o contraseña incorrectos.')
       setIsLoading(false)
       return
     }
 
     router.push('/transacciones')
+  }
+
+  const handleRegisterSubmit = async (event) => {
+    event.preventDefault()
+    setLoginError('')
+    setRegisterError('')
+    setSuccess('')
+
+    if (!registerName.trim() || !registerEmail.trim() || !registerPassword.trim() || !registerConfirmPassword.trim()) {
+      setRegisterError('Todos los campos son obligatorios.')
+      return
+    }
+
+    if (registerPassword.trim().length < 8) {
+      setRegisterError('La contraseña debe tener al menos 8 caracteres.')
+      return
+    }
+
+    if (registerPassword !== registerConfirmPassword) {
+      setRegisterError('Las contraseñas no coinciden.')
+      return
+    }
+
+    setIsRegisterLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 450))
+
+    const result = registerUser({
+      name: registerName,
+      email: registerEmail,
+      password: registerPassword,
+      confirmPassword: registerConfirmPassword
+    })
+
+    if (!result.ok) {
+      setRegisterError(result.message)
+      setIsRegisterLoading(false)
+      return
+    }
+
+    setRegisterName('')
+    setRegisterEmail('')
+    setRegisterPassword('')
+    setRegisterConfirmPassword('')
+    setShowRegisterPassword(false)
+    setEmail(result.user?.email || registerEmail.trim().toLowerCase())
+    setPassword('')
+    setShowPassword(false)
+    setIsRegisterLoading(false)
+    setActiveTab(AUTH_TABS.LOGIN)
+    setSuccess('Cuenta creada correctamente. Ahora inicia sesión con tu correo y contraseña.')
   }
 
   const openResetModal = () => {
@@ -110,6 +184,9 @@ export default function Login() {
     setEmail(resetEmail.trim())
     setPassword('')
     setShowPassword(false)
+    setLoginError('')
+    setRegisterError('')
+    setActiveTab(AUTH_TABS.LOGIN)
     setSuccess('Contraseña restablecida. Ya puedes iniciar sesión con tu nueva contraseña.')
     setIsResetLoading(false)
     closeResetModal()
@@ -175,92 +252,212 @@ export default function Login() {
 
                 <ul className="nav nav-tabs mb-4" role="tablist">
                   <li className="nav-item flex-fill" role="presentation">
-                    <button className="nav-link active w-100 fw-semibold" type="button">
+                    <button
+                      className={`nav-link w-100 fw-semibold ${activeTab === AUTH_TABS.LOGIN ? 'active' : ''}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === AUTH_TABS.LOGIN}
+                      onClick={() => switchTab(AUTH_TABS.LOGIN)}
+                    >
                       Iniciar sesión
                     </button>
                   </li>
                   <li className="nav-item flex-fill" role="presentation">
-                    <button className="nav-link disabled w-100" type="button" disabled>
+                    <button
+                      className={`nav-link w-100 fw-semibold ${activeTab === AUTH_TABS.REGISTER ? 'active' : ''}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === AUTH_TABS.REGISTER}
+                      onClick={() => switchTab(AUTH_TABS.REGISTER)}
+                    >
                       Registrarse
                     </button>
                   </li>
                 </ul>
 
-                <form className="d-grid gap-3" onSubmit={handleSubmit}>
-                  <div>
-                    <label className="form-label">Correo electrónico</label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <span className="material-symbols-outlined fs-6">mail</span>
-                      </span>
-                      <input
-                        className="form-control"
-                        placeholder="correo@ejemplo.com"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">Contraseña</label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <span className="material-symbols-outlined fs-6">lock</span>
-                      </span>
-                      <input
-                        className="form-control"
-                        placeholder="••••••••"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                      <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                      >
-                        <span className="material-symbols-outlined fs-6">
-                          {showPassword ? 'visibility_off' : 'visibility'}
+                {activeTab === AUTH_TABS.LOGIN ? (
+                  <form className="d-grid gap-3" onSubmit={handleSubmit}>
+                    <div>
+                      <label className="form-label">Correo electrónico</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">mail</span>
                         </span>
+                        <input
+                          className="form-control"
+                          placeholder="correo@ejemplo.com"
+                          type="email"
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label">Contraseña</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">lock</span>
+                        </span>
+                        <input
+                          className="form-control"
+                          placeholder="••••••••"
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                        >
+                          <span className="material-symbols-outlined fs-6">
+                            {showPassword ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {loginError && (
+                      <div className="alert alert-danger py-2 mb-0" role="alert">
+                        {loginError}
+                      </div>
+                    )}
+
+                    {success && (
+                      <div className="alert alert-success py-2 mb-0" role="alert">
+                        {success}
+                      </div>
+                    )}
+
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="recordarme" />
+                        <label className="form-check-label small text-secondary" htmlFor="recordarme">
+                          Recordarme
+                        </label>
+                      </div>
+                      <button className="btn btn-link text-decoration-none small p-0" type="button" onClick={openResetModal}>
+                        ¿Olvidaste tu contraseña?
                       </button>
                     </div>
-                  </div>
 
-                  {error && (
-                    <div className="alert alert-danger py-2 mb-0" role="alert">
-                      {error}
-                    </div>
-                  )}
-
-                  {success && (
-                    <div className="alert alert-success py-2 mb-0" role="alert">
-                      {success}
-                    </div>
-                  )}
-
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="recordarme" />
-                      <label className="form-check-label small text-secondary" htmlFor="recordarme">
-                        Recordarme
-                      </label>
-                    </div>
-                    <button className="btn btn-link text-decoration-none small p-0" type="button" onClick={openResetModal}>
-                      ¿Olvidaste tu contraseña?
+                    <button
+                      className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold"
+                      type="submit"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Cargando...' : 'Iniciar sesión'}
+                      <span className="material-symbols-outlined">arrow_forward</span>
                     </button>
-                  </div>
+                  </form>
+                ) : (
+                  <form className="d-grid gap-3" onSubmit={handleRegisterSubmit}>
+                    <div>
+                      <label className="form-label">Nombre completo</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">person</span>
+                        </span>
+                        <input
+                          className="form-control"
+                          placeholder="Tu nombre"
+                          type="text"
+                          value={registerName}
+                          onChange={(event) => setRegisterName(event.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                  <button
-                    className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold"
-                    type="submit"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Cargando...' : 'Iniciar sesión'}
-                    <span className="material-symbols-outlined">arrow_forward</span>
-                  </button>
-                </form>
+                    <div>
+                      <label className="form-label">Correo electrónico</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">mail</span>
+                        </span>
+                        <input
+                          className="form-control"
+                          placeholder="correo@ejemplo.com"
+                          type="email"
+                          value={registerEmail}
+                          onChange={(event) => setRegisterEmail(event.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label">Contraseña</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">lock</span>
+                        </span>
+                        <input
+                          className="form-control"
+                          placeholder="Mínimo 8 caracteres"
+                          type={showRegisterPassword ? 'text' : 'password'}
+                          value={registerPassword}
+                          onChange={(event) => setRegisterPassword(event.target.value)}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowRegisterPassword((prev) => !prev)}
+                        >
+                          <span className="material-symbols-outlined fs-6">
+                            {showRegisterPassword ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label">Confirmar contraseña</label>
+                      <div className="input-group">
+                        <span className="input-group-text">
+                          <span className="material-symbols-outlined fs-6">lock</span>
+                        </span>
+                        <input
+                          className="form-control"
+                          placeholder="Repite la contraseña"
+                          type={showRegisterPassword ? 'text' : 'password'}
+                          value={registerConfirmPassword}
+                          onChange={(event) => setRegisterConfirmPassword(event.target.value)}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowRegisterPassword((prev) => !prev)}
+                        >
+                          <span className="material-symbols-outlined fs-6">
+                            {showRegisterPassword ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {registerError && (
+                      <div className="alert alert-danger py-2 mb-0" role="alert">
+                        {registerError}
+                      </div>
+                    )}
+
+                    <button
+                      className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold"
+                      type="submit"
+                      disabled={isRegisterLoading}
+                    >
+                      {isRegisterLoading ? 'Creando cuenta...' : 'Crear cuenta'}
+                      <span className="material-symbols-outlined">person_add</span>
+                    </button>
+
+                    <p className="small text-secondary mb-0 text-center">
+                      ¿Ya tienes una cuenta?{' '}
+                      <button className="btn btn-link p-0 text-decoration-none align-baseline" type="button" onClick={() => switchTab(AUTH_TABS.LOGIN)}>
+                        Inicia sesión
+                      </button>
+                    </p>
+                  </form>
+                )}
               </div>
             </div>
           </div>
